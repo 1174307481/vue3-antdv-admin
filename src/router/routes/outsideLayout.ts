@@ -1,5 +1,5 @@
 import type { RouteRecordRaw } from 'vue-router';
-import { LOGIN_NAME } from '@/router/constant';
+import { LOGIN_NAME, REGISTER_NAME } from '@/router/constant';
 
 /**
  * layout布局之外的路由
@@ -13,4 +13,16 @@ export const LoginRoute: RouteRecordRaw = {
   },
 };
 
-export default [LoginRoute];
+/**
+ * layout布局之外的路由
+ */
+export const RegisterRoute: RouteRecordRaw = {
+  path: '/register',
+  name: REGISTER_NAME,
+  component: () => import('@/views/register/index.vue'),
+  meta: {
+    title: '注册',
+  },
+};
+
+export default [LoginRoute, RegisterRoute];

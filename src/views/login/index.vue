@@ -1,7 +1,6 @@
 <template>
   <div class="login-box">
     <div class="login-logo">
-      <!-- <svg-icon name="logo" :size="45" /> -->
       <img src="~@/assets/images/logo.png" width="45" />
       <h1 class="mb-0 ml-2 text-3xl font-bold">Antdv Admin</h1>
     </div>
@@ -44,10 +43,12 @@
           登录
         </a-button>
       </a-form-item>
+      <a-form-item>
+        <router-link to="/register">没有账号？注册</router-link>
+      </a-form-item>
     </a-form>
   </div>
 </template>
-
 <script setup lang="ts">
   import { ref } from 'vue';
   import { useRoute, useRouter } from 'vue-router';
