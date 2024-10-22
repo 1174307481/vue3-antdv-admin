@@ -1,4 +1,4 @@
-import { computed, reactive, ref, unref, watch, type Slots } from 'vue';
+import { computed, reactive, ref, unref, watch, useSlots } from 'vue';
 import { omit } from 'lodash-es';
 import tableConfig from '../dynamic-table.config';
 import { useScroll } from './useScroll';
@@ -11,18 +11,14 @@ export type Pagination = TableProps['pagination'];
 
 export type TableState = ReturnType<typeof useTableState>;
 
-export type UseTableStateParams = {
-  props: DynamicTableProps;
-  slots: Slots;
-};
-
 interface SearchState {
   sortInfo: Recordable;
   filterInfo: Record<string, string[]>;
 }
 
-export const useTableState = ({ props, slots }: UseTableStateParams) => {
+export const useTableState = (props: DynamicTableProps) => {
   const { t } = useI18n();
+  const slots = useSlots();
   /** 表格实例 */
   const tableRef = ref<InstanceType<typeof Table>>();
   /** 查询表单实例 */
@@ -32,7 +28,7 @@ export const useTableState = ({ props, slots }: UseTableStateParams) => {
   /** 表格数据 */
   const tableData = ref<any[]>([]);
   /** 内部属性 */
-  const innerPropsRef = ref<Partial<DynamicTableProps>>({});
+  const innerPropsRef = ref<Partial<DynamicTableProps>>({ ...props });
   /** 分页配置参数 */
   const paginationRef = ref<NonNullable<Pagination>>(false);
   /** 表格加载 */
@@ -71,13 +67,8 @@ export const useTableState = ({ props, slots }: UseTableStateParams) => {
       ...props.pagination,
     };
   }
-
-  const getProps = computed(() => {
-    return Object.assign({}, props, unref(innerPropsRef));
-  });
-
   const getBindValues = computed(() => {
-    const props = unref(getProps);
+    const props = unref(innerPropsRef);
 
     let propsData: Recordable = {
       ...props,
@@ -131,7 +122,6 @@ export const useTableState = ({ props, slots }: UseTableStateParams) => {
     tableData,
     searchFormRef,
     innerPropsRef,
-    getProps,
     getBindValues,
     paginationRef,
     editFormModel,

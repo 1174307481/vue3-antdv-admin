@@ -3,7 +3,7 @@
     <Teleport to="body" :disabled="!isFullscreen">
       <div ref="containerElRef">
         <SchemaForm
-          v-if="getProps.search"
+          v-if="innerPropsRef.search"
           ref="searchFormRef"
           class="bg-white dark:bg-black mb-16px !pt-24px pr-24px"
           submit-on-reset
@@ -24,7 +24,7 @@
             :title-tooltip="titleTooltip"
             :show-table-setting="showTableSetting"
           >
-            <template v-for="name of Object.keys($slots)" #[name]="data">
+            <template v-for="name of Object.keys($slots)" #[name]="data" :key="name">
               <slot :name="name" v-bind="data || {}" />
             </template>
           </ToolBar>
@@ -58,7 +58,7 @@
 </template>
 
 <script lang="tsx" setup>
-  import { useSlots, computed, onBeforeMount } from 'vue';
+  import { computed, onBeforeMount } from 'vue';
   import { Table } from 'ant-design-vue';
   import {
     useTableMethods,
@@ -67,11 +67,9 @@
     useTableForm,
     useTableState,
     useColumns,
-    useEditable,
   } from './hooks';
   import { ToolBar } from './components';
   import { dynamicTableProps, dynamicTableEmits } from './dynamic-table';
-  import type { DynamicTableType } from './types';
   import { SchemaForm } from '@/components/core/schema-form';
 
   defineOptions({
@@ -81,10 +79,9 @@
 
   const props = defineProps(dynamicTableProps);
   const emit = defineEmits(dynamicTableEmits);
-  const slots = useSlots();
 
   // 表格内部状态
-  const tableState = useTableState({ props, slots });
+  const tableState = useTableState(props);
   const {
     tableRef,
     tableData,
@@ -92,43 +89,38 @@
     containerElRef,
     searchFormRef,
     editTableFormRef,
-    getProps,
+    innerPropsRef,
     getBindValues,
     editFormModel,
   } = tableState;
 
-  // 创建表格上下文
-  const dynamicTableContext = { props, emit, slots, ...tableState } as DynamicTableType;
-  createTableContext(dynamicTableContext);
-
   // 表格内部方法
-  const tableMethods = useTableMethods();
-  Object.assign(dynamicTableContext, tableMethods);
+  const tableMethods = useTableMethods({ props, emit, tableState });
   const { fetchData, handleSubmit, handleTableChange, handleEditFormValidate } = tableMethods;
-  // 控制编辑行
-  const editableHooks = useEditable();
-  Object.assign(dynamicTableContext, editableHooks);
 
   // 表格列的配置描述
-  const { innerColumns } = useColumns();
+  const { innerColumns } = useColumns({ props, tableState, tableMethods });
 
   // 搜索表单
-  const tableForm = useTableForm();
+  const tableForm = useTableForm({ tableState, tableMethods });
   const { getFormProps, replaceFormSlotKey, getFormSlotKeys } = tableForm;
 
   // 表单导出
-  const exportData2ExcelHooks = useExportData2Excel();
+  const exportData2ExcelHooks = useExportData2Excel({ props, tableState, tableMethods });
 
   // 当前组件所有的状态和方法
-  Object.assign(dynamicTableContext, {
-    ...props,
+  const dynamicTableContext = {
+    tableProps: props,
+    emit,
+    innerColumns,
     ...tableState,
     ...tableForm,
     ...tableMethods,
-    ...editableHooks,
     ...exportData2ExcelHooks,
-    emit,
-  });
+  };
+
+  // 创建表格上下文
+  createTableContext(dynamicTableContext);
 
   defineExpose(dynamicTableContext);
 

@@ -1,28 +1,37 @@
-import { ref, watchEffect, unref, h } from 'vue';
+import { computed, unref, h, useSlots } from 'vue';
 import { cloneDeep, isFunction, mergeWith } from 'lodash-es';
 import { Input } from 'ant-design-vue';
 import { EditableCell } from '../components';
 import { ColumnKeyFlag, columnKeyFlags, type CustomRenderParams } from '../types/column';
 import tableConfig from '../dynamic-table.config';
-import { useTableContext } from './useTableContext';
-import type { TableColumn } from '@/components/core/dynamic-table';
+import type { TableState } from './useTableState';
+import type { TableMethods } from './useTableMethods';
+import type { DynamicTableProps, TableColumn } from '@/components/core/dynamic-table';
 import type { FormSchema } from '@/components/core/schema-form';
 import { isBoolean } from '@/utils/is';
 import { TableAction } from '@/components/core/dynamic-table/src/components';
 
-export const useColumns = () => {
-  const tableContext = useTableContext();
-  const { slots, props, getProps, paginationRef } = tableContext;
-  const innerColumns = ref(props.columns);
+interface UseColumnsPayload {
+  tableState: TableState;
+  props: DynamicTableProps;
+  tableMethods: TableMethods;
+}
+export type UseColumnsType = ReturnType<typeof useColumns>;
 
-  watchEffect(() => {
-    const innerProps = { ...unref(getProps) };
+export const useColumns = (payload: UseColumnsPayload) => {
+  const slots = useSlots();
+  const { tableState, props, tableMethods } = payload;
+  const { innerPropsRef, paginationRef } = tableState;
+  const { getColumnKey, isEditable } = tableMethods;
 
-    const columns = cloneDeep(innerProps!.columns!.filter((n) => !n.hideInTable));
+  const innerColumns = computed(() => {
+    const innerProps = cloneDeep(unref(innerPropsRef));
+
+    // @ts-ignore
+    const columns = innerProps!.columns!.filter((n) => !n.hideInTable);
 
     // 是否添加序号列
     if (innerProps?.showIndex) {
-      // @ts-ignore
       columns.unshift({
         dataIndex: ColumnKeyFlag.INDEX,
         title: '序号',
@@ -41,25 +50,24 @@ export const useColumns = () => {
       } as TableColumn);
     }
 
-    // @ts-ignore
-    innerColumns.value = columns.map((item) => {
+    return columns.map((item) => {
       const customRender = item.customRender;
 
       const rowKey = props.rowKey as string;
-      const columnKey = tableContext.getColumnKey(item) as string;
+      const columnKey = getColumnKey(item) as string;
 
       item.align ||= tableConfig.defaultAlign;
 
       item.customRender = (options) => {
         const { record, index, text } = options as CustomRenderParams<Recordable<any>>;
         /** 当前行是否开启了编辑行模式 */
-        const isEditableRow = tableContext.isEditable(record[rowKey]);
+        const isEditableRow = isEditable(record[rowKey]);
         /** 是否开启了单元格编辑模式 */
         const isEditableCell = innerProps.editableType === 'cell';
         /** 当前单元格是否允许被编辑 */
         const isCellEditable = isBoolean(item.editable)
           ? item.editable
-          : item.editable?.(options) ?? true;
+          : (item.editable?.(options) ?? true);
         /** 是否允许被编辑 */
         const isShowEditable =
           (isEditableRow || isEditableCell) &&
@@ -84,6 +92,9 @@ export const useColumns = () => {
       if (item.actions && columnKey === ColumnKeyFlag.ACTION) {
         item.customRender = (options) => {
           const { record, index } = options;
+          const tableContext = {
+            ...tableMethods,
+          };
           return h(TableAction, {
             actions: item.actions!(options, tableContext),
             rowKey: record[rowKey] ?? index,
@@ -113,7 +124,7 @@ export const useColumns = () => {
 
   /** 获取当前行的form schema */
   const getColumnFormSchema = (item: TableColumn, record: Recordable): FormSchema => {
-    const key = tableContext.getColumnKey(item) as string;
+    const key = getColumnKey(item) as string;
     /** 是否继承搜索表单的属性 */
     const isExtendSearchFormProps = !Object.is(
       item.editFormItemProps?.extendSearchFormProps,
@@ -125,7 +136,7 @@ export const useColumns = () => {
       component: () => Input,
       defaultValue: record[key],
       colProps: {
-        span: unref(getProps).editableType === 'cell' ? 20 : 24,
+        span: unref(innerPropsRef).editableType === 'cell' ? 20 : 24,
       },
       formItemProps: {
         help: '',

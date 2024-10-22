@@ -1,17 +1,15 @@
 {
   "typescript.tsdk": "./node_modules/typescript/lib",
+  "typescript.tsserver.maxTsServerMemory": 4096,
   "npm.packageManager": "pnpm",
   "editor.tabSize": 2,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  // 保存文件缓慢时，可以考虑开启以下 3 行配置。
-  "vue.server.maxOldSpaceSize": 4096,
-  "vue.server.hybridMode": true,
-  "typescript.tsserver.maxTsServerMemory": 4096,
   "files.eol": "\n",
   "editor.guides.bracketPairs": true,
   "editor.bracketPairColorization.enabled": true,
   "vue.inlayHints.missingProps": true,
   "vue.autoInsert.dotValue": true,
+  "vue.server.maxOldSpaceSize": 4096,
   "explorer.copyRelativePathSeparator": "/",
   "search.exclude": {
     "**/node_modules": true,
@@ -61,7 +59,7 @@
     "**/dist/**": true,
     "**/yarn.lock": true
   },
-  "eslint.experimental.useFlatConfig": true,
+  "eslint.useFlatConfig": true,
   "stylelint.enable": true,
   "stylelint.validate": ["css", "less", "postcss", "scss", "vue", "sass"],
   "path-intellisense.mappings": {

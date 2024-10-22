@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import mockServerPlugin from '@admin-pkg/vite-plugin-msw/vite';
 import TinymceResourcePlugin from '@admin-pkg/vite-plugin-tinymce-resource';
 import Http2Proxy from '@admin-pkg/vite-plugin-http2-proxy';
+import Inspector from 'vite-plugin-vue-inspector';
 import pkg from './package.json';
 import type { UserConfig, ConfigEnv } from 'vite';
 
@@ -50,6 +51,7 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
     },
     plugins: [
       vue(),
+      Inspector(),
       Unocss(),
       vueJsx({
         // options are passed on to @vue/babel-plugin-jsx
@@ -152,16 +154,6 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
       rollupOptions: {
         output: {
           // minifyInternalExports: false,
-          manualChunks(id) {
-            //TODO fix circular imports
-            if (id.includes('/src/locales/helper.ts')) {
-              return 'antdv';
-            } else if (id.includes('node_modules/ant-design-vue/')) {
-              return 'antdv';
-            } else if (/node_modules\/(vue|vue-router|pinia)\//.test(id)) {
-              return 'vue';
-            }
-          },
         },
         onwarn(warning, rollupWarn) {
           // ignore circular dependency warning

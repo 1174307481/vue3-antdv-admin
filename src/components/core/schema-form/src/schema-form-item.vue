@@ -85,7 +85,6 @@
 
   const { schema } = toRefs(props);
 
-  // @ts-ignore
   const itemLabelWidthProp = useItemLabelWidth(schema, formPropsRef);
 
   const namePath = computed<string[]>(() => {
@@ -207,7 +206,7 @@
   const getComponent = computed(() => {
     const component = props.schema.component;
     return isString(component)
-      ? componentMap[component] ?? vnodeFactory(component)
+      ? (componentMap[component] ?? vnodeFactory(component))
       : vnodeFactory(component);
   });
 
@@ -406,7 +405,7 @@
       const { component } = unref(schema);
       const componentProps = newSchema.componentProps as ComponentProps;
 
-      if (['Select', 'RadioGroup', 'CheckBoxGroup'].some((n) => n === component)) {
+      if (['Select', 'RadioGroup', 'CheckboxGroup'].some((n) => n === component)) {
         componentProps.options = result;
       } else if (['TreeSelect', 'Tree'].some((n) => n === component)) {
         componentProps.treeData = result;
