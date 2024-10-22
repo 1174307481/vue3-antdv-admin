@@ -35,7 +35,10 @@ export const baseColumns: TableColumnItem[] = [
           {{
             title: () => record.path,
             default: () => (
-              <a href={baseApiUrl + record.path} target="_blank">
+              <a
+                href={record.path.startsWith('http') ? record.path : baseApiUrl + record.path}
+                target="_blank"
+              >
                 {record.name}
               </a>
             ),
@@ -49,7 +52,11 @@ export const baseColumns: TableColumnItem[] = [
     dataIndex: 'path',
     width: 150,
     customRender({ record }) {
-      return <Image src={baseApiUrl + record.path}></Image>;
+      return (
+        <Image
+          src={record.path.startsWith('http') ? record.path : baseApiUrl + record.path}
+        ></Image>
+      );
     },
   },
   {
